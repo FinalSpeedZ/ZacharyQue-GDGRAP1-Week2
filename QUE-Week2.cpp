@@ -15,6 +15,14 @@ float x_mod = 0.f;
 float y_mod = 0.f;
 float rot_mod = 0.f;
 
+
+bool movingUp = false;
+bool movingDown = false;
+bool movingLeft = false;
+bool movingRight = false;
+
+bool rotating = false;
+
 void Key_Callback(
     GLFWwindow* window,
     int key,
@@ -22,25 +30,45 @@ void Key_Callback(
     int action,
     int mod
 ) {
-    if (key == GLFW_KEY_D && action == GLFW_PRESS) {
-        x_mod += 0.1f;
-    }
 
-    if (key == GLFW_KEY_A && action == GLFW_PRESS) {
-        x_mod -= 0.1f;
-    }
+    float move_speed = 0.1f;
 
-    if (key == GLFW_KEY_W && action == GLFW_PRESS) {
-        y_mod += 0.1f;
-    }
+    if (key == GLFW_KEY_D && action == GLFW_PRESS) 
+        movingRight = true;
 
-    if (key == GLFW_KEY_S && action == GLFW_PRESS) {
-        y_mod -= 0.1f;
-    }
+    if (key == GLFW_KEY_A && action == GLFW_PRESS) 
+        movingLeft = true;
 
-    if (key == GLFW_KEY_SPACE && action == GLFW_PRESS) {
-        rot_mod += 0.1f;
-    }
+    if (key == GLFW_KEY_W && action == GLFW_PRESS) 
+        movingUp = true;
+    
+    if (key == GLFW_KEY_S && action == GLFW_PRESS) 
+        movingDown = true;
+    
+    if (key == GLFW_KEY_SPACE && action == GLFW_PRESS && !rotating) 
+        rotating = true;
+
+    if (key == GLFW_KEY_D && action == GLFW_RELEASE)
+        movingRight = false;
+
+    if (key == GLFW_KEY_A && action == GLFW_RELEASE)
+        movingLeft = false;
+
+    if (key == GLFW_KEY_W && action == GLFW_RELEASE)
+        movingUp = false;
+
+    if (key == GLFW_KEY_S && action == GLFW_RELEASE)
+        movingDown = false; 
+
+    // Update
+    if (movingRight)
+        x_mod += move_speed;
+    if (movingLeft)
+        x_mod -= move_speed;
+    if (movingDown)
+        y_mod -= move_speed;
+    if (movingUp)
+        y_mod += move_speed;   
 }
 
 
@@ -207,6 +235,14 @@ int main()
 
         color += 0.1f;
 
+        if (rotating)
+            rot_mod += 0.5f;
+
+        if (rot_mod == 1080.f) {
+            rotating = false;
+            rot_mod = 0.f;
+        }
+
         if (color >= 1.f) color = 0.f;
 
         unsigned int xLoc = glGetUniformLocation(shaderProgram, "x");
@@ -220,8 +256,8 @@ int main()
         /* TRANSLATION MATRIX */
         glm::mat4 transformation_matrix =
             glm::translate(identity_matrix4, // usually start with identity matrix
-                glm::vec3(0.f, // translate x by
-                          0.f, // translate y by
+                glm::vec3(x_mod, // translate x by
+                          y_mod, // translate y by
                           0) // translate z by
                 );
 
