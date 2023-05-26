@@ -1,3 +1,7 @@
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
@@ -7,8 +11,9 @@
 #include <string>
 #include <iostream>
 
-float x_mod;
-float y_mod;
+float x_mod = 0.f;
+float y_mod = 0.f;
+float rot_mod = 0.f;
 
 void Key_Callback(
     GLFWwindow* window,
@@ -31,6 +36,10 @@ void Key_Callback(
 
     if (key == GLFW_KEY_S && action == GLFW_PRESS) {
         y_mod -= 0.1f;
+    }
+
+    if (key == GLFW_KEY_SPACE && action == GLFW_PRESS) {
+        rot_mod += 0.1f;
     }
 }
 
@@ -159,6 +168,35 @@ int main()
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
+    /* IDENTITY MATRIX */
+    glm::mat3 identity_matrix3 = glm::mat3(1.0f);
+    glm::mat4 identity_matrix4 = glm::mat4(1.0f);
+
+    ///* TRANSLATION MATRIX */
+    //glm::mat4 translation =
+    //    glm::translate(identity_matrix4, // usually start with identity matrix
+    //        glm::vec3(x, // translate x by
+    //                  y, // translate y by
+    //                  z) // translate z by
+    //        );
+
+    ///* SCALE MATRIX */
+    //glm::mat4 scale =
+    //    glm::scale(identity_matrix4, // usually start with identity matrix
+    //        glm::vec3(x, // scale x by
+    //                  y, // scale y by
+    //                  z) // scale z by
+    //    );
+
+    ///* ROTATION MATRIX */
+    //glm::mat4 rotate =
+    //    glm::rotate(identity_matrix4, // usually start with identity matrix
+    //        glm::radians(theta), // rotate by theta degrees
+    //        glm::vec3(x, // x component of normalized axis vector
+    //                  y, // y component of normalized axis vector
+    //                  z) // z component of normalized axis vector
+    //    );
+
     float color = 0.f;
 
     /* Loop until the user closes the window */
@@ -166,7 +204,7 @@ int main()
     {
         /* Render here */
         glClear(GL_COLOR_BUFFER_BIT);
-        
+
         color += 0.1f;
 
         if (color >= 1.f) color = 0.f;
@@ -176,6 +214,42 @@ int main()
 
         unsigned int yLoc = glGetUniformLocation(shaderProgram, "y");
         glUniform1f(yLoc, y_mod);
+
+
+        /* LINEAR TRANSFORMATION */
+        /* TRANSLATION MATRIX */
+        glm::mat4 transformation_matrix =
+            glm::translate(identity_matrix4, // usually start with identity matrix
+                glm::vec3(0.f, // translate x by
+                          0.f, // translate y by
+                          0) // translate z by
+                );
+
+        /* SCALE MATRIX */
+        transformation_matrix = 
+            glm::scale(transformation_matrix, // usually start with identity matrix
+                glm::vec3(2.f, // scale x by
+                          2.f, // scale y by
+                          2.f) // scale z by
+            );
+
+        /* ROTATION MATRIX */
+        transformation_matrix =
+            glm::rotate(transformation_matrix, // usually start with identity matrix
+                glm::radians(rot_mod), // rotate by theta degrees
+                glm::vec3(0.f, // x component of normalized axis vector
+                          1.f, // y component of normalized axis vector
+                          0.f) // z component of normalized axis vector
+            );
+
+
+        unsigned int transformLoc = glGetUniformLocation(shaderProgram, "transform");
+
+        glUniformMatrix4fv(transformLoc,
+                           1,
+                           GL_FALSE,
+                           glm::value_ptr(transformation_matrix)
+        );
 
         unsigned int xColor = glGetUniformLocation(shaderProgram, "color");
         glUniform1f(xColor, color);
