@@ -33,5 +33,6 @@ void main() {
 		else 
 			b_color = b_color - color;	
 	}
-	FragColor = vec4(r_color, g_color, b_color, 1.0f);
+
+	FragColor = vec4(1.0f, 1.0f, 1.0f, 1.0f);
 }

@@ -11,17 +11,30 @@
 #include <string>
 #include <iostream>
 
+float speed = 0.05f;
+
 float x_mod = 0.f;
 float y_mod = 0.f;
-float rot_mod = 0.f;
 
-
+// moving flags
 bool movingUp = false;
 bool movingDown = false;
 bool movingLeft = false;
 bool movingRight = false;
 
-bool rotating = false;
+// rotating flags
+bool rotatingLeft = false;
+bool rotatingRight = false;
+bool rotatingUp = false;
+bool rotatingDown = false;
+
+// scaling flags
+bool increasingScale = false;
+bool decreassingScale = false;
+
+// zooming flags
+bool zoomingIn = false;
+bool zoomingOut = false;
 
 void Key_Callback(
     GLFWwindow* window,
@@ -31,8 +44,9 @@ void Key_Callback(
     int mod
 ) {
 
-    float move_speed = 0.1f;
+    float move_speed = 0.02f;
 
+    // Press Key
     if (key == GLFW_KEY_D && action == GLFW_PRESS) 
         movingRight = true;
 
@@ -44,10 +58,18 @@ void Key_Callback(
     
     if (key == GLFW_KEY_S && action == GLFW_PRESS) 
         movingDown = true;
-    
-    if (key == GLFW_KEY_SPACE && action == GLFW_PRESS && !rotating) 
-        rotating = true;
 
+    if (key == GLFW_KEY_LEFT && action == GLFW_PRESS)
+        rotatingLeft = true;
+
+    if (key == GLFW_KEY_LEFT && action == GLFW_PRESS)
+        rotatingLeft = true;
+
+    if (key == GLFW_KEY_RIGHT && action == GLFW_PRESS)
+        rotatingRight = true;
+
+
+    // Release Key
     if (key == GLFW_KEY_D && action == GLFW_RELEASE)
         movingRight = false;
 
@@ -62,13 +84,14 @@ void Key_Callback(
 
     // Update
     if (movingRight)
-        x_mod += move_speed;
+        x_mod += speed;
     if (movingLeft)
-        x_mod -= move_speed;
+        x_mod -= speed;
     if (movingDown)
-        y_mod -= move_speed;
+        y_mod -= speed;
     if (movingUp)
-        y_mod += move_speed;   
+        y_mod += speed;
+
 }
 
 
@@ -80,8 +103,10 @@ int main()
     if (!glfwInit())
         return -1;
 
+    float height = 600.f;
+    float width = 600.f;
     /* Create a windowed mode window and its OpenGL context */
-    window = glfwCreateWindow(640, 640, "Zachary Que", NULL, NULL);
+    window = glfwCreateWindow(height, width, "Zachary Que", NULL, NULL);
     if (!window)
     {
         glfwTerminate();
@@ -92,14 +117,23 @@ int main()
     glfwMakeContextCurrent(window);
     gladLoadGL();
 
+    //// size of viewport (i.e for splitscreen)
+    //glViewport(0, // Min X
+    //           0, // Min Y
+    //           300, // Width
+    //           600); // Height
+
+    // User input
     glfwSetKeyCallback(window, Key_Callback);
 
+    // Vertex shader
     std::fstream vertSrc("Shaders/sample.vert");
     std::stringstream vertBuff;
     vertBuff << vertSrc.rdbuf();
     std::string vertS = vertBuff.str();
     const char* v = vertS.c_str();
 
+    // Fragment shader
     std::fstream fragSrc("Shaders/sample.frag");
     std::stringstream fragBuff;
     fragBuff << fragSrc.rdbuf();
@@ -200,6 +234,22 @@ int main()
     glm::mat3 identity_matrix3 = glm::mat3(1.0f);
     glm::mat4 identity_matrix4 = glm::mat4(1.0f);
 
+    /* PROJECTION MATRIX */
+    // Orthographic
+    //glm::mat4 projection = glm::ortho(-2.f, // left most point
+    //                                  2.f,  // right most point
+    //                                  -2.f, // bottom most point
+    //                                  2.f,  // top most point
+    //                                  -1.f, // z near
+    //                                  1.f); // z far
+    // Perspective
+    glm::mat4 projection = glm::perspective(
+        glm::radians(60.f), // Field of View
+        height / width, // aspect Ratio
+        0.1f,           // near
+        100.f);         // far
+
+
     ///* TRANSLATION MATRIX */
     //glm::mat4 translation =
     //    glm::translate(identity_matrix4, // usually start with identity matrix
@@ -226,7 +276,6 @@ int main()
     //    );
 
     float color = 0.f;
-
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
     {
@@ -234,14 +283,6 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT);
 
         color += 0.1f;
-
-        if (rotating)
-            rot_mod += 0.5f;
-
-        if (rot_mod == 1080.f) {
-            rotating = false;
-            rot_mod = 0.f;
-        }
 
         if (color >= 1.f) color = 0.f;
 
@@ -258,7 +299,7 @@ int main()
             glm::translate(identity_matrix4, // usually start with identity matrix
                 glm::vec3(x_mod, // translate x by
                           y_mod, // translate y by
-                          0) // translate z by
+                          -5.f) // translate z by
                 );
 
         /* SCALE MATRIX */
@@ -269,22 +310,27 @@ int main()
                           2.f) // scale z by
             );
 
-        /* ROTATION MATRIX */
-        transformation_matrix =
-            glm::rotate(transformation_matrix, // usually start with identity matrix
-                glm::radians(rot_mod), // rotate by theta degrees
-                glm::vec3(0.f, // x component of normalized axis vector
-                          1.f, // y component of normalized axis vector
-                          0.f) // z component of normalized axis vector
-            );
-
+        ///* ROTATION MATRIX */
+        //transformation_matrix =
+        //    glm::rotate(transformation_matrix, // usually start with identity matrix
+        //        glm::radians(theta), // rotate by theta degrees
+        //        glm::vec3(0.f, // x component of normalized axis vector
+        //                  1.f, // y component of normalized axis vector
+        //                  0.f) // z component of normalized axis vector
+        //    );
 
         unsigned int transformLoc = glGetUniformLocation(shaderProgram, "transform");
-
         glUniformMatrix4fv(transformLoc,
                            1,
                            GL_FALSE,
                            glm::value_ptr(transformation_matrix)
+        ); 
+        
+        unsigned int projLoc = glGetUniformLocation(shaderProgram, "projection");
+        glUniformMatrix4fv(projLoc,
+                           1,
+                           GL_FALSE,
+                           glm::value_ptr(projection)
         );
 
         unsigned int xColor = glGetUniformLocation(shaderProgram, "color");
