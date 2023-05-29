@@ -11,10 +11,20 @@
 #include <string>
 #include <iostream>
 
-float speed = 0.05f;
 
+// WASD Movement variables
 float x_mod = 0.f;
 float y_mod = 0.f;
+
+// Rotating variables
+float x_axis_rotate_mod = 0.f;
+float y_axis_rotate_mod = 0.f;
+
+// Scale variables
+float scale_mod = 1.f;
+
+// Zoom variables
+float z_mod = -1.f;
 
 // moving flags
 bool movingUp = false;
@@ -29,8 +39,8 @@ bool rotatingUp = false;
 bool rotatingDown = false;
 
 // scaling flags
+bool decreasingScale = false;
 bool increasingScale = false;
-bool decreassingScale = false;
 
 // zooming flags
 bool zoomingIn = false;
@@ -44,45 +54,76 @@ void Key_Callback(
     int mod
 ) {
 
-    float move_speed = 0.02f;
+    float speed = 0.05f;
 
-    // Press Key
+    /* Press Key */
+    // WASD
     if (key == GLFW_KEY_D && action == GLFW_PRESS) 
         movingRight = true;
-
     if (key == GLFW_KEY_A && action == GLFW_PRESS) 
         movingLeft = true;
-
     if (key == GLFW_KEY_W && action == GLFW_PRESS) 
         movingUp = true;
-    
     if (key == GLFW_KEY_S && action == GLFW_PRESS) 
         movingDown = true;
 
-    if (key == GLFW_KEY_LEFT && action == GLFW_PRESS)
-        rotatingLeft = true;
-
-    if (key == GLFW_KEY_LEFT && action == GLFW_PRESS)
-        rotatingLeft = true;
-
+    // Arroy Keys
     if (key == GLFW_KEY_RIGHT && action == GLFW_PRESS)
         rotatingRight = true;
+    if (key == GLFW_KEY_LEFT && action == GLFW_PRESS)
+        rotatingLeft = true;
+    if (key == GLFW_KEY_UP && action == GLFW_PRESS)
+        rotatingUp = true;
+    if (key == GLFW_KEY_DOWN && action == GLFW_PRESS)
+        rotatingDown = true;
 
+    // Q/E
+    if (key == GLFW_KEY_Q && action == GLFW_PRESS)
+        decreasingScale = true;
+    if (key == GLFW_KEY_E && action == GLFW_PRESS)
+        increasingScale = true;
 
-    // Release Key
+    // Z/X
+    if (key == GLFW_KEY_Z && action == GLFW_PRESS)
+        zoomingIn = true;
+    if (key == GLFW_KEY_X && action == GLFW_PRESS)
+        zoomingOut = true;
+
+    /* Release Key */
+    // WASD
     if (key == GLFW_KEY_D && action == GLFW_RELEASE)
         movingRight = false;
-
     if (key == GLFW_KEY_A && action == GLFW_RELEASE)
         movingLeft = false;
-
     if (key == GLFW_KEY_W && action == GLFW_RELEASE)
         movingUp = false;
-
     if (key == GLFW_KEY_S && action == GLFW_RELEASE)
-        movingDown = false; 
+        movingDown = false;
 
-    // Update
+    // Arroy Keys
+    if (key == GLFW_KEY_RIGHT && action == GLFW_RELEASE)
+        rotatingRight = false;
+    if (key == GLFW_KEY_LEFT && action == GLFW_RELEASE)
+        rotatingLeft = false;
+    if (key == GLFW_KEY_UP && action == GLFW_RELEASE)
+        rotatingUp = false;
+    if (key == GLFW_KEY_DOWN && action == GLFW_RELEASE)
+        rotatingDown = false;
+
+    // Q/E
+    if (key == GLFW_KEY_Q && action == GLFW_RELEASE)
+        decreasingScale = false;
+    if (key == GLFW_KEY_E && action == GLFW_RELEASE)
+        increasingScale = false;
+
+    // Z/X
+    if (key == GLFW_KEY_Z && action == GLFW_RELEASE)
+        zoomingIn = false;
+    if (key == GLFW_KEY_X && action == GLFW_RELEASE)
+        zoomingOut = false;
+
+    /* Update */
+    // WASD
     if (movingRight)
         x_mod += speed;
     if (movingLeft)
@@ -92,6 +133,27 @@ void Key_Callback(
     if (movingUp)
         y_mod += speed;
 
+    // Arrow Keys
+    if (rotatingRight) // Turn right (CW)
+        y_axis_rotate_mod -= speed * 15;
+    if (rotatingLeft) // Turn left (CCW)
+        y_axis_rotate_mod += speed * 15;
+    if (rotatingUp) // Tilt nose up
+        x_axis_rotate_mod -= speed * 15;
+    if (rotatingDown) // Tilt nose down
+        x_axis_rotate_mod += speed * 15;
+
+    // Q/E
+    if (decreasingScale)
+        scale_mod -= speed;
+    if (increasingScale)
+        scale_mod += speed;
+   
+    // Z/X
+    if (zoomingIn)
+        z_mod += speed;
+    if (zoomingOut)
+        z_mod -= speed;
 }
 
 
@@ -103,10 +165,10 @@ int main()
     if (!glfwInit())
         return -1;
 
-    float height = 600.f;
     float width = 600.f;
+    float height = 600.f;
     /* Create a windowed mode window and its OpenGL context */
-    window = glfwCreateWindow(height, width, "Zachary Que", NULL, NULL);
+    window = glfwCreateWindow((int)width, (int)height, "Zachary Que", NULL, NULL);
     if (!window)
     {
         glfwTerminate();
@@ -117,11 +179,7 @@ int main()
     glfwMakeContextCurrent(window);
     gladLoadGL();
 
-    //// size of viewport (i.e for splitscreen)
-    //glViewport(0, // Min X
-    //           0, // Min Y
-    //           300, // Width
-    //           600); // Height
+    glViewport(0, 0, (int)width, (int)height);
 
     // User input
     glfwSetKeyCallback(window, Key_Callback);
@@ -182,7 +240,6 @@ int main()
             0.f,   0.5f,  0.f, //0
             -0.5f, -0.5f, 0.f, //1
             0.5f, -0.5f,  0.f  //2
-
     };
 
     GLuint indices[]{
@@ -231,17 +288,9 @@ int main()
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
     /* IDENTITY MATRIX */
-    glm::mat3 identity_matrix3 = glm::mat3(1.0f);
-    glm::mat4 identity_matrix4 = glm::mat4(1.0f);
+    glm::mat4 identity = glm::mat4(1.0f);
 
     /* PROJECTION MATRIX */
-    // Orthographic
-    //glm::mat4 projection = glm::ortho(-2.f, // left most point
-    //                                  2.f,  // right most point
-    //                                  -2.f, // bottom most point
-    //                                  2.f,  // top most point
-    //                                  -1.f, // z near
-    //                                  1.f); // z far
     // Perspective
     glm::mat4 projection = glm::perspective(
         glm::radians(60.f), // Field of View
@@ -250,31 +299,6 @@ int main()
         100.f);         // far
 
 
-    ///* TRANSLATION MATRIX */
-    //glm::mat4 translation =
-    //    glm::translate(identity_matrix4, // usually start with identity matrix
-    //        glm::vec3(x, // translate x by
-    //                  y, // translate y by
-    //                  z) // translate z by
-    //        );
-
-    ///* SCALE MATRIX */
-    //glm::mat4 scale =
-    //    glm::scale(identity_matrix4, // usually start with identity matrix
-    //        glm::vec3(x, // scale x by
-    //                  y, // scale y by
-    //                  z) // scale z by
-    //    );
-
-    ///* ROTATION MATRIX */
-    //glm::mat4 rotate =
-    //    glm::rotate(identity_matrix4, // usually start with identity matrix
-    //        glm::radians(theta), // rotate by theta degrees
-    //        glm::vec3(x, // x component of normalized axis vector
-    //                  y, // y component of normalized axis vector
-    //                  z) // z component of normalized axis vector
-    //    );
-
     float color = 0.f;
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
@@ -282,48 +306,25 @@ int main()
         /* Render here */
         glClear(GL_COLOR_BUFFER_BIT);
 
+        /* Random color */
         color += 0.1f;
-
         if (color >= 1.f) color = 0.f;
-
-        unsigned int xLoc = glGetUniformLocation(shaderProgram, "x");
-        glUniform1f(xLoc, x_mod);
-
-        unsigned int yLoc = glGetUniformLocation(shaderProgram, "y");
-        glUniform1f(yLoc, y_mod);
-
-
-        /* LINEAR TRANSFORMATION */
-        /* TRANSLATION MATRIX */
-        glm::mat4 transformation_matrix =
-            glm::translate(identity_matrix4, // usually start with identity matrix
-                glm::vec3(x_mod, // translate x by
-                          y_mod, // translate y by
-                          -5.f) // translate z by
-                );
-
-        /* SCALE MATRIX */
-        transformation_matrix = 
-            glm::scale(transformation_matrix, // usually start with identity matrix
-                glm::vec3(2.f, // scale x by
-                          2.f, // scale y by
-                          2.f) // scale z by
-            );
-
-        ///* ROTATION MATRIX */
-        //transformation_matrix =
-        //    glm::rotate(transformation_matrix, // usually start with identity matrix
-        //        glm::radians(theta), // rotate by theta degrees
-        //        glm::vec3(0.f, // x component of normalized axis vector
-        //                  1.f, // y component of normalized axis vector
-        //                  0.f) // z component of normalized axis vector
-        //    );
+        
+        /* Transformation Matrix */
+        // Translate
+        glm::mat4 transform = glm::translate(identity, glm::vec3(x_mod, y_mod, z_mod));
+        // Scale
+        transform = glm::scale(transform, glm::vec3(scale_mod, scale_mod, 1.0f));
+        // Rotate x
+        transform = glm::rotate(transform, glm::radians(x_axis_rotate_mod), glm::vec3(1.0f, 0.f, 0.f));
+        // Rotate y
+        transform = glm::rotate(transform, glm::radians(y_axis_rotate_mod), glm::vec3(0.f, 1.0f, 0.f));
 
         unsigned int transformLoc = glGetUniformLocation(shaderProgram, "transform");
         glUniformMatrix4fv(transformLoc,
                            1,
                            GL_FALSE,
-                           glm::value_ptr(transformation_matrix)
+                           glm::value_ptr(transform)
         ); 
         
         unsigned int projLoc = glGetUniformLocation(shaderProgram, "projection");
@@ -346,7 +347,7 @@ int main()
             GL_TRIANGLES,
             mesh_indices.size(),
             GL_UNSIGNED_INT,
-            0
+            (void*)0
         );
 
         /* Swap front and back buffers */

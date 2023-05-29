@@ -7,5 +7,6 @@ uniform mat4 transform; // 4 by 4 transformation matrix
 uniform mat4 projection;
 
 void main() {
+
 	gl_Position = projection * transform * vec4(aPos, 1.0);
 }
