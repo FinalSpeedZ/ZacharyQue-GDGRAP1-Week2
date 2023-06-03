@@ -21,10 +21,10 @@ float x_axis_rotate_mod = 0.f;
 float y_axis_rotate_mod = 0.f;
 
 // Scale variables
-float scale_mod = 1.f;
+float scale_mod = 10.f;
 
 // Zoom variables
-float z_mod = -1.f;
+float z_mod = -0.5f;
 
 // moving flags
 bool movingUp = false;
@@ -235,16 +235,16 @@ int main()
         );
     }
 
-    GLfloat vertices[] {
-        //  x      y      z 
-            0.f,   0.5f,  0.f, //0
-            -0.5f, -0.5f, 0.f, //1
-            0.5f, -0.5f,  0.f  //2
-    };
+    //GLfloat vertices[] {
+    //    //  x      y      z 
+    //        0.f,   0.5f,  0.f, //0
+    //        -0.5f, -0.5f, 0.f, //1
+    //        0.5f, -0.5f,  0.f  //2
+    //};
 
-    GLuint indices[]{
-        0, 1, 2
-    };
+    //GLuint indices[]{
+    //    0, 1, 2
+    //};
 
     GLuint VAO, VBO, EBO;
 
@@ -298,27 +298,62 @@ int main()
         0.1f,           // near
         100.f);         // far
 
-
-    float color = 0.f;
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
     {
         /* Render here */
         glClear(GL_COLOR_BUFFER_BIT);
-
-        /* Random color */
-        color += 0.1f;
-        if (color >= 1.f) color = 0.f;
         
-        /* Transformation Matrix */
+        /* CAMERA MATRIX */
+        glm::vec3 cameraPos = glm::vec3(x_mod, y_mod, 10.f);
+        glm::mat4 cameraPosMatrix = glm::translate(glm::mat4(1.f), cameraPos * -1.f);
+
+        /* ORIENTATION MATRIX */
+        glm::vec3 worldUp = glm::normalize(glm::vec3(0.f, 1.f, 0.f));
+        glm::vec3 cameraCenter = glm::vec3(0.f, 3.f, 0.f);
+        //// Forward Vector
+        //glm::vec3 F = (cameraCenter - cameraPos);
+        //F = glm::normalize(F);
+        //// Right Vector
+        //glm::vec3 R = glm::normalize(glm::cross(F, worldUp));
+        //// Up Vector
+        //glm::vec3 U = glm::normalize(glm::cross(R, F));
+        //// Camera Orientation
+        //glm::mat4 cameraOrientation = glm::mat4(1.f);
+        //// Manually assign the matrix, Matrix[Col][Row]
+        //// Row 1
+        //cameraOrientation[0][0] = R.x;
+        //cameraOrientation[1][0] = R.y;
+        //cameraOrientation[2][0] = R.z;
+        //// Row 2
+        //cameraOrientation[0][1] = U.x;
+        //cameraOrientation[1][1] = U.y;
+        //cameraOrientation[2][1] = U.z;
+        //// Row 3
+        //cameraOrientation[0][2] = -F.x;
+        //cameraOrientation[1][2] = -F.y;
+        //cameraOrientation[2][2] = -F.z;
+        //
+        ///* CAMERA VIEW MATRIX */
+        //glm::mat4 viewMatrix = cameraOrientation * cameraPosMatrix;
+        glm::mat4 viewMatrix = glm::lookAt(cameraPos, cameraCenter, worldUp);
+
+        /* TRANSFORMATION MATRIX */
         // Translate
         glm::mat4 transform = glm::translate(identity, glm::vec3(x_mod, y_mod, z_mod));
         // Scale
-        transform = glm::scale(transform, glm::vec3(scale_mod, scale_mod, 1.0f));
+        transform = glm::scale(transform, glm::vec3(scale_mod, scale_mod, scale_mod));
         // Rotate x
         transform = glm::rotate(transform, glm::radians(x_axis_rotate_mod), glm::vec3(1.0f, 0.f, 0.f));
         // Rotate y
         transform = glm::rotate(transform, glm::radians(y_axis_rotate_mod), glm::vec3(0.f, 1.0f, 0.f));
+
+        unsigned int viewLoc = glGetUniformLocation(shaderProgram, "view");
+                               glUniformMatrix4fv(viewLoc,
+                                   1,
+                                   GL_FALSE,
+                                   glm::value_ptr(viewMatrix)
+        );
 
         unsigned int transformLoc = glGetUniformLocation(shaderProgram, "transform");
         glUniformMatrix4fv(transformLoc,
@@ -333,9 +368,6 @@ int main()
                            GL_FALSE,
                            glm::value_ptr(projection)
         );
-
-        unsigned int xColor = glGetUniformLocation(shaderProgram, "color");
-        glUniform1f(xColor, color);
 
         // Draw
         glBindVertexArray(VAO);
