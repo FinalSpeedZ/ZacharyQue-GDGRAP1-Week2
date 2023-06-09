@@ -8,6 +8,9 @@
 #define TINYOBJLOADER_IMPLEMENTATION
 #include "tiny_obj_loader.h"
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
 #include <string>
 #include <iostream>
 
@@ -21,7 +24,7 @@ float x_axis_rotate_mod = 0.f;
 float y_axis_rotate_mod = 0.f;
 
 // Scale variables
-float scale_mod = 10.f;
+float scale_mod = 2.f;
 
 // Zoom variables
 float z_mod = -0.5f;
@@ -135,13 +138,13 @@ void Key_Callback(
 
     // Arrow Keys
     if (rotatingRight) // Turn right (CW)
-        y_axis_rotate_mod -= speed * 15;
+        y_axis_rotate_mod -= speed * 30;
     if (rotatingLeft) // Turn left (CCW)
-        y_axis_rotate_mod += speed * 15;
+        y_axis_rotate_mod += speed * 30;
     if (rotatingUp) // Tilt nose up
-        x_axis_rotate_mod -= speed * 15;
+        x_axis_rotate_mod -= speed * 30;
     if (rotatingDown) // Tilt nose down
-        x_axis_rotate_mod += speed * 15;
+        x_axis_rotate_mod += speed * 30;
 
     // Q/E
     if (decreasingScale)
@@ -179,10 +182,71 @@ int main()
     glfwMakeContextCurrent(window);
     gladLoadGL();
 
-    glViewport(0, 0, (int)width, (int)height);
-
     // User input
     glfwSetKeyCallback(window, Key_Callback);
+
+    glViewport(0, 0, (int)width, (int)height);
+
+    /* Variablles for our texture */
+    int img_width, img_height, colorChannels;
+    
+    // Fix the flipped texture (by default it is flipped)
+    stbi_set_flip_vertically_on_load(true);
+
+    /* Load Texture */
+    unsigned char* tex_bytes = 
+        stbi_load("3D/ayaya.png", // texture path
+        &img_width, // fills out the width
+        &img_height, // fills out the height
+        &colorChannels, //fills out the color channel
+        0);
+
+    /* Setup Texture */
+    // Open Gl reference to texture
+    GLuint texture;
+    // Generate a reference
+    glGenTextures(1, &texture);
+    // Set the current texture we're working on to Texture 0
+    glActiveTexture(GL_TEXTURE);
+    // Bind our next tasks to Tex0
+    // To our current reference similar to what we're doing to VBOs
+    glBindTexture(GL_TEXTURE_2D, texture);
+    glTexParameteri(
+        GL_TEXTURE_2D,
+        GL_TEXTURE_WRAP_S, // S is X axis, T is Y axis
+        GL_CLAMP_TO_EDGE // Stretch
+        //GL_REPEAT // Tile
+    );
+    glTexParameteri(
+        GL_TEXTURE_2D,
+        GL_TEXTURE_WRAP_T, // S is X axis, T is Y axis
+        GL_CLAMP_TO_EDGE // Stretch
+        //GL_REPEAT // Tile
+    );
+
+
+    /* Assign Texture to Reference */
+    // Assign the loaded texture to the OpenGL reference
+    glTexImage2D(
+        GL_TEXTURE_2D,
+        0, // Texture 0
+        GL_RGBA, // Target color format of the texture
+        img_width, // Texture width
+        img_height, // Texture height
+        0,
+        GL_RGBA, // Color format of the textyre
+        GL_UNSIGNED_BYTE, 
+        tex_bytes // Loaded textures in bytes
+    );
+
+    /* Clean up texture (free memory) */
+    // Generate the mipmaps to the current texture
+    glGenerateMipmap(GL_TEXTURE_2D);
+    // Free up the loaded bytes
+    stbi_image_free(tex_bytes);
+
+    // Enable Depth Testing
+    glEnable(GL_DEPTH_TEST);
 
     // Vertex shader
     std::fstream vertSrc("Shaders/sample.vert");
@@ -212,7 +276,7 @@ int main()
 
     glLinkProgram(shaderProgram);
 
-    std::string path = "3D/bunny.obj";
+    std::string path = "3D/myCube.obj";
     std::vector<tinyobj::shape_t> shape;
     std::vector<tinyobj::material_t> material;
     std::string warning, error;
@@ -235,23 +299,25 @@ int main()
         );
     }
 
-    //GLfloat vertices[] {
-    //    //  x      y      z 
-    //        0.f,   0.5f,  0.f, //0
-    //        -0.5f, -0.5f, 0.f, //1
-    //        0.5f, -0.5f,  0.f  //2
-    //};
+    /* UV Data of Texture */
+    GLfloat UV[]{
+        0.f, 2.f,
+        0.f, 0.f,
+        2.f, 2.f,
+        2.f, 0.f,
+        2.f, 2.f,
+        2.f, 0.f,
+        0.f, 2.f,
+        0.f, 0.f
+    };
 
-    //GLuint indices[]{
-    //    0, 1, 2
-    //};
+    GLuint VAO, VBO, EBO, VBO_UV;
 
-    GLuint VAO, VBO, EBO;
-
-    // initialize VAO and VBO
+    // initialize VAO, VBO, EBO, UV
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
     glGenBuffers(1, &EBO);
+    glGenBuffers(1, &VBO_UV);
 
     glBindVertexArray(VAO);
 
@@ -260,7 +326,6 @@ int main()
         GL_ARRAY_BUFFER,
         sizeof(GLfloat) * attributes.vertices.size(),
         &attributes.vertices[0],
-        //attributes.vertices.data(),
         GL_STATIC_DRAW
     );
 
@@ -273,6 +338,26 @@ int main()
         (void*)0
     );
     glEnableVertexAttribArray(0);
+
+    // Bind the UV Buffer
+    glBindBuffer(GL_ARRAY_BUFFER, VBO_UV);
+    // Add in the buffer data
+    glBufferData(GL_ARRAY_BUFFER,
+        sizeof(GLfloat) * (sizeof(UV) / sizeof(UV[0])), // float * size of UV array
+        &UV[0], // UV array earlier
+        GL_DYNAMIC_DRAW);
+
+    // Add in how to interpret the array
+    glVertexAttribPointer(
+        2, // Index 2 for Textures
+        2, // UV
+        GL_FLOAT, // Type of array
+        GL_FALSE,
+        2 * sizeof(float), // Every 2 index
+        (void*)0
+    );
+    // Enable 2 for our UV / Tex Coords
+    glEnableVertexAttribArray(2);
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(
@@ -302,7 +387,7 @@ int main()
     while (!glfwWindowShouldClose(window))
     {
         /* Render here */
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear the depth buffer as well
         
         /* CAMERA MATRIX */
         glm::vec3 cameraPos = glm::vec3(x_mod, y_mod, 10.f);
@@ -369,9 +454,15 @@ int main()
                            glm::value_ptr(projection)
         );
 
-        // Draw
+        // Get the location of the tex 0 in the fragment shader
+        GLuint tex0Address = glGetUniformLocation(shaderProgram, "tex0");
+        // Tell OpenGl to use the texture
+        glBindTexture(GL_TEXTURE_2D, texture);
+        // Use the texture at index 0
+        glUniform1i(tex0Address, 0);
+
+        /* Draw */
         glBindVertexArray(VAO);
-        //glDrawArrays(GL_TRIANGLES, 0, 3);
 
         glUseProgram(shaderProgram);
 
