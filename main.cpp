@@ -14,10 +14,9 @@
 #include <string>
 #include <iostream>
 
-
 // WASD Movement variables
 float x_mod = 0.f;
-float y_mod = 0.f;
+float y_mod = 5.f;
 
 // Rotating variables
 float x_axis_rotate_mod = 0.f;
@@ -61,13 +60,13 @@ void Key_Callback(
 
     /* Press Key */
     // WASD
-    if (key == GLFW_KEY_D && action == GLFW_PRESS) 
+    if (key == GLFW_KEY_D && action == GLFW_PRESS)
         movingRight = true;
-    if (key == GLFW_KEY_A && action == GLFW_PRESS) 
+    if (key == GLFW_KEY_A && action == GLFW_PRESS)
         movingLeft = true;
-    if (key == GLFW_KEY_W && action == GLFW_PRESS) 
+    if (key == GLFW_KEY_W && action == GLFW_PRESS)
         movingUp = true;
-    if (key == GLFW_KEY_S && action == GLFW_PRESS) 
+    if (key == GLFW_KEY_S && action == GLFW_PRESS)
         movingDown = true;
 
     // Arroy Keys
@@ -151,7 +150,7 @@ void Key_Callback(
         scale_mod -= speed;
     if (increasingScale)
         scale_mod += speed;
-   
+
     // Z/X
     if (zoomingIn)
         z_mod += speed;
@@ -189,17 +188,17 @@ int main()
 
     /* Variablles for our texture */
     int img_width, img_height, colorChannels;
-    
+
     // Fix the flipped texture (by default it is flipped)
     stbi_set_flip_vertically_on_load(true);
 
     /* Load Texture */
-    unsigned char* tex_bytes = 
+    unsigned char* tex_bytes =
         stbi_load("3D/ayaya.png", // texture path
-        &img_width, // fills out the width
-        &img_height, // fills out the height
-        &colorChannels, //fills out the color channel
-        0);
+            &img_width, // fills out the width
+            &img_height, // fills out the height
+            &colorChannels, //fills out the color channel
+            0);
 
     /* Setup Texture */
     // Open Gl reference to texture
@@ -211,18 +210,18 @@ int main()
     // Bind our next tasks to Tex0
     // To our current reference similar to what we're doing to VBOs
     glBindTexture(GL_TEXTURE_2D, texture);
-    glTexParameteri(
-        GL_TEXTURE_2D,
-        GL_TEXTURE_WRAP_S, // S is X axis, T is Y axis
-        GL_CLAMP_TO_EDGE // Stretch
-        //GL_REPEAT // Tile
-    );
-    glTexParameteri(
-        GL_TEXTURE_2D,
-        GL_TEXTURE_WRAP_T, // S is X axis, T is Y axis
-        GL_CLAMP_TO_EDGE // Stretch
-        //GL_REPEAT // Tile
-    );
+    //glTexParameteri(
+    //    GL_TEXTURE_2D,
+    //    GL_TEXTURE_WRAP_S, // S is X axis, T is Y axis
+    //    GL_CLAMP_TO_EDGE // Stretch
+    //    //GL_REPEAT // Tile
+    //);
+    //glTexParameteri(
+    //    GL_TEXTURE_2D,
+    //    GL_TEXTURE_WRAP_T, // S is X axis, T is Y axis
+    //    GL_CLAMP_TO_EDGE // Stretch
+    //    //GL_REPEAT // Tile
+    //);
 
 
     /* Assign Texture to Reference */
@@ -235,7 +234,7 @@ int main()
         img_height, // Texture height
         0,
         GL_RGBA, // Color format of the textyre
-        GL_UNSIGNED_BYTE, 
+        GL_UNSIGNED_BYTE,
         tex_bytes // Loaded textures in bytes
     );
 
@@ -299,15 +298,30 @@ int main()
         );
     }
 
+    std::vector<GLfloat> fullVertexData;
+    for (int i = 0; i < shape[0].mesh.indices.size(); i++) {
+        tinyobj::index_t vData = shape[0].mesh.indices[i];
+        // X
+        fullVertexData.push_back(attributes.vertices[vData.vertex_index * 3]);
+        // Y
+        fullVertexData.push_back(attributes.vertices[vData.vertex_index * 3 + 1]);
+        // Z
+        fullVertexData.push_back(attributes.vertices[vData.vertex_index * 3 + 2]);
+        // U
+        fullVertexData.push_back(attributes.texcoords[vData.texcoord_index * 2]);
+        // V
+        fullVertexData.push_back(attributes.texcoords[vData.texcoord_index * 2 + 1]);
+    }
+
     /* UV Data of Texture */
     GLfloat UV[]{
-        0.f, 2.f,
+        0.f, 1.f,
         0.f, 0.f,
-        2.f, 2.f,
-        2.f, 0.f,
-        2.f, 2.f,
-        2.f, 0.f,
-        0.f, 2.f,
+        1.f, 1.f,
+        1.f, 0.f,
+        1.f, 1.f,
+        1.f, 0.f,
+        0.f, 1.f,
         0.f, 0.f
     };
 
@@ -316,16 +330,16 @@ int main()
     // initialize VAO, VBO, EBO, UV
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
-    glGenBuffers(1, &EBO);
-    glGenBuffers(1, &VBO_UV);
+    //glGenBuffers(1, &EBO);
+    //glGenBuffers(1, &VBO_UV);
 
     glBindVertexArray(VAO);
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(
         GL_ARRAY_BUFFER,
-        sizeof(GLfloat) * attributes.vertices.size(),
-        &attributes.vertices[0],
+        sizeof(GLfloat) * fullVertexData.size(),
+        fullVertexData.data(),
         GL_STATIC_DRAW
     );
 
@@ -334,18 +348,20 @@ int main()
         3, // X Y Z 
         GL_FLOAT,
         GL_FALSE,
-        3 * sizeof(GLfloat),
+        5 * sizeof(GLfloat),
         (void*)0
     );
     glEnableVertexAttribArray(0);
 
-    // Bind the UV Buffer
-    glBindBuffer(GL_ARRAY_BUFFER, VBO_UV);
-    // Add in the buffer data
-    glBufferData(GL_ARRAY_BUFFER,
-        sizeof(GLfloat) * (sizeof(UV) / sizeof(UV[0])), // float * size of UV array
-        &UV[0], // UV array earlier
-        GL_DYNAMIC_DRAW);
+    GLintptr uvptr = 3 * sizeof(float);
+
+    //// Bind the UV Buffer
+    //glBindBuffer(GL_ARRAY_BUFFER, VBO_UV);
+    //// Add in the buffer data
+    //glBufferData(GL_ARRAY_BUFFER,
+    //    sizeof(GLfloat) * (sizeof(UV) / sizeof(UV[0])), // float * size of UV array
+    //    &UV[0], // UV array earlier
+    //    GL_DYNAMIC_DRAW);
 
     // Add in how to interpret the array
     glVertexAttribPointer(
@@ -353,19 +369,19 @@ int main()
         2, // UV
         GL_FLOAT, // Type of array
         GL_FALSE,
-        2 * sizeof(float), // Every 2 index
-        (void*)0
+        5 * sizeof(float), // Every 2 index
+        (void*)uvptr
     );
     // Enable 2 for our UV / Tex Coords
     glEnableVertexAttribArray(2);
 
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(
-        GL_ELEMENT_ARRAY_BUFFER,
-        sizeof(GLuint) * mesh_indices.size(),
-        mesh_indices.data(),
-        GL_STATIC_DRAW
-    );
+    //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    //glBufferData(
+    //    GL_ELEMENT_ARRAY_BUFFER,
+    //    sizeof(GLuint) * mesh_indices.size(),
+    //    mesh_indices.data(),
+    //    GL_STATIC_DRAW
+    //);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
@@ -388,7 +404,7 @@ int main()
     {
         /* Render here */
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear the depth buffer as well
-        
+
         /* CAMERA MATRIX */
         glm::vec3 cameraPos = glm::vec3(x_mod, y_mod, 10.f);
         glm::mat4 cameraPosMatrix = glm::translate(glm::mat4(1.f), cameraPos * -1.f);
@@ -396,31 +412,8 @@ int main()
         /* ORIENTATION MATRIX */
         glm::vec3 worldUp = glm::normalize(glm::vec3(0.f, 1.f, 0.f));
         glm::vec3 cameraCenter = glm::vec3(0.f, 3.f, 0.f);
-        //// Forward Vector
-        //glm::vec3 F = (cameraCenter - cameraPos);
-        //F = glm::normalize(F);
-        //// Right Vector
-        //glm::vec3 R = glm::normalize(glm::cross(F, worldUp));
-        //// Up Vector
-        //glm::vec3 U = glm::normalize(glm::cross(R, F));
-        //// Camera Orientation
-        //glm::mat4 cameraOrientation = glm::mat4(1.f);
-        //// Manually assign the matrix, Matrix[Col][Row]
-        //// Row 1
-        //cameraOrientation[0][0] = R.x;
-        //cameraOrientation[1][0] = R.y;
-        //cameraOrientation[2][0] = R.z;
-        //// Row 2
-        //cameraOrientation[0][1] = U.x;
-        //cameraOrientation[1][1] = U.y;
-        //cameraOrientation[2][1] = U.z;
-        //// Row 3
-        //cameraOrientation[0][2] = -F.x;
-        //cameraOrientation[1][2] = -F.y;
-        //cameraOrientation[2][2] = -F.z;
-        //
-        ///* CAMERA VIEW MATRIX */
-        //glm::mat4 viewMatrix = cameraOrientation * cameraPosMatrix;
+
+        /* CAMERA VIEW MATRIX */
         glm::mat4 viewMatrix = glm::lookAt(cameraPos, cameraCenter, worldUp);
 
         /* TRANSFORMATION MATRIX */
@@ -434,24 +427,24 @@ int main()
         transform = glm::rotate(transform, glm::radians(y_axis_rotate_mod), glm::vec3(0.f, 1.0f, 0.f));
 
         unsigned int viewLoc = glGetUniformLocation(shaderProgram, "view");
-                               glUniformMatrix4fv(viewLoc,
-                                   1,
-                                   GL_FALSE,
-                                   glm::value_ptr(viewMatrix)
+        glUniformMatrix4fv(viewLoc,
+            1,
+            GL_FALSE,
+            glm::value_ptr(viewMatrix)
         );
 
         unsigned int transformLoc = glGetUniformLocation(shaderProgram, "transform");
         glUniformMatrix4fv(transformLoc,
-                           1,
-                           GL_FALSE,
-                           glm::value_ptr(transform)
-        ); 
-        
+            1,
+            GL_FALSE,
+            glm::value_ptr(transform)
+        );
+
         unsigned int projLoc = glGetUniformLocation(shaderProgram, "projection");
         glUniformMatrix4fv(projLoc,
-                           1,
-                           GL_FALSE,
-                           glm::value_ptr(projection)
+            1,
+            GL_FALSE,
+            glm::value_ptr(projection)
         );
 
         // Get the location of the tex 0 in the fragment shader
@@ -461,17 +454,18 @@ int main()
         // Use the texture at index 0
         glUniform1i(tex0Address, 0);
 
-        /* Draw */
+        /* Draw EBOs */
         glBindVertexArray(VAO);
 
         glUseProgram(shaderProgram);
 
-        glDrawElements(
-            GL_TRIANGLES,
-            mesh_indices.size(),
-            GL_UNSIGNED_INT,
-            (void*)0
-        );
+        //glDrawElements(
+        //    GL_TRIANGLES,
+        //    mesh_indices.size(),
+        //    GL_UNSIGNED_INT,
+        //    (void*)0
+        //);
+        glDrawArrays(GL_TRIANGLES, 0, fullVertexData.size() / 5);
 
         /* Swap front and back buffers */
         glfwSwapBuffers(window);
