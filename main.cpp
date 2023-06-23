@@ -245,9 +245,21 @@ int main()
     glm::vec3 worldUp = glm::normalize(glm::vec3(0.f, 1.f, 0.f));
     glm::vec3 cameraCenter = glm::vec3(0.f, 0.f, -1.f);
 
-    /* Light Variables */
+    /* Light variables */
     glm::vec3 lightPos = glm::vec3(-10, 3, 0);
     glm::vec3 lightColor = glm::vec3(1, 1, 1);
+
+    /* Ambient variables */
+    // Ambient strength
+    float ambientStr = 0.1f;
+    // Ambient Color
+    glm::vec3 ambientColor = lightColor;
+
+    /* Specular variables */
+    // Spec strength
+    float specStr = 0.5f;
+    // Spec phong
+    float specPhong = 16;
 
     /* Rotation variables */
     float rot_mod = 0.f;
@@ -293,14 +305,32 @@ int main()
             glm::value_ptr(projection)
         );
 
-        /* Lighting Variables */
-        // Light Pos Address
+        /* Lighting variables */
+        // Light pos address
         GLuint lightAddress = glGetUniformLocation(shaderProgram, "lightPos");
         glUniform3fv(lightAddress, 1, glm::value_ptr(lightPos));
         // Light Color 
         GLuint lightColorAddress = glGetUniformLocation(shaderProgram, "lightColor");
         glUniform3fv(lightColorAddress, 1, glm::value_ptr(lightColor));
 
+        /* Ambient variables */
+        // Ambient str address
+        GLuint ambientStrAddress = glGetUniformLocation(shaderProgram, "ambientStr");
+        glUniform1f(ambientStrAddress, ambientStr);
+        // Light Color 
+        GLuint ambientColorAddress = glGetUniformLocation(shaderProgram, "ambientColor");
+        glUniform3fv(lightColorAddress, 1, glm::value_ptr(lightColor));
+
+        /* Specular variables */
+        // Get the address of the camera pos from the shader
+        GLuint cameraPosAddress = glGetUniformLocation(shaderProgram, "cameraPos");
+        glUniform3fv(cameraPosAddress, 1, glm::value_ptr(cameraPos));
+        // Get the address of the spec str from the shader
+        GLuint specStrAddress = glGetUniformLocation(shaderProgram, "specStr");
+        glUniform1f(specStrAddress, specStr);
+        // Get the address of the spec phong from the shader
+        GLuint specPhongAddress = glGetUniformLocation(shaderProgram, "specPhong");
+        glUniform1f(specPhongAddress, specPhong);
 
         // Get the location of the tex 0 in the fragment shader
         GLuint tex0Address = glGetUniformLocation(shaderProgram, "tex0");

@@ -11,6 +11,21 @@ uniform vec3 lightPos;
 // Color of the light: rgb
 uniform vec3 lightColor;
 
+// Strength of ambient light
+uniform float ambientStr;
+
+// Color of the ambient light
+uniform vec3 ambientColor;
+
+// Camera position
+uniform vec3 cameraPos;
+
+// Specular strength
+uniform float specStr;
+
+// Specular Phong
+uniform float specPhong;
+
 // Should recieve the textCoord from the vertex shader
 in vec2 texCoord;
 
@@ -33,10 +48,23 @@ void main() {
 	// Multiply it to the desired light color
 	vec3 diffuse = diff * lightColor;
 
+	// Get the ambient light
+	vec3 ambientCol = ambientColor * ambientStr;
+
+	// Get our view direction from the camera to the fragment
+	vec3 viewDir = normalize(cameraPos - fragPos);
+
+	// Get the reflection vector
+	vec3 reflectDir = reflect(-lightDir, normal);
+
+	// Get the specular light 
+	float spec = pow(max(dot(reflectDir, viewDir), 0.1), specPhong);
+	vec3 specColor = spec * specStr * lightColor;
+
 	// Changing the colors using rgba values
 	// FragColor = vec4(1.0f, 0.5f, 0.25f, 1.0f);
 
 	// Assign the texture color using the function
 	// Apply the diffuse
-	FragColor = vec4(diffuse, 1.0) * texture(tex0, texCoord);
+	FragColor = vec4(specColor + diffuse + ambientCol, 1.0) * texture(tex0, texCoord);
 }
