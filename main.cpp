@@ -14,151 +14,6 @@
 #include <string>
 #include <iostream>
 
-// WASD Movement variables
-float x_mod = 0.f;
-float y_mod = 5.f;
-
-// Rotating variables
-float x_axis_rotate_mod = 0.f;
-float y_axis_rotate_mod = 0.f;
-
-// Scale variables
-float scale_mod = 2.f;
-
-// Zoom variables
-float z_mod = -0.5f;
-
-// moving flags
-bool movingUp = false;
-bool movingDown = false;
-bool movingLeft = false;
-bool movingRight = false;
-
-// rotating flags
-bool rotatingLeft = false;
-bool rotatingRight = false;
-bool rotatingUp = false;
-bool rotatingDown = false;
-
-// scaling flags
-bool decreasingScale = false;
-bool increasingScale = false;
-
-// zooming flags
-bool zoomingIn = false;
-bool zoomingOut = false;
-
-void Key_Callback(
-    GLFWwindow* window,
-    int key,
-    int scancode,
-    int action,
-    int mod
-) {
-
-    float speed = 0.05f;
-
-    /* Press Key */
-    // WASD
-    if (key == GLFW_KEY_D && action == GLFW_PRESS)
-        movingRight = true;
-    if (key == GLFW_KEY_A && action == GLFW_PRESS)
-        movingLeft = true;
-    if (key == GLFW_KEY_W && action == GLFW_PRESS)
-        movingUp = true;
-    if (key == GLFW_KEY_S && action == GLFW_PRESS)
-        movingDown = true;
-
-    // Arroy Keys
-    if (key == GLFW_KEY_RIGHT && action == GLFW_PRESS)
-        rotatingRight = true;
-    if (key == GLFW_KEY_LEFT && action == GLFW_PRESS)
-        rotatingLeft = true;
-    if (key == GLFW_KEY_UP && action == GLFW_PRESS)
-        rotatingUp = true;
-    if (key == GLFW_KEY_DOWN && action == GLFW_PRESS)
-        rotatingDown = true;
-
-    // Q/E
-    if (key == GLFW_KEY_Q && action == GLFW_PRESS)
-        decreasingScale = true;
-    if (key == GLFW_KEY_E && action == GLFW_PRESS)
-        increasingScale = true;
-
-    // Z/X
-    if (key == GLFW_KEY_Z && action == GLFW_PRESS)
-        zoomingIn = true;
-    if (key == GLFW_KEY_X && action == GLFW_PRESS)
-        zoomingOut = true;
-
-    /* Release Key */
-    // WASD
-    if (key == GLFW_KEY_D && action == GLFW_RELEASE)
-        movingRight = false;
-    if (key == GLFW_KEY_A && action == GLFW_RELEASE)
-        movingLeft = false;
-    if (key == GLFW_KEY_W && action == GLFW_RELEASE)
-        movingUp = false;
-    if (key == GLFW_KEY_S && action == GLFW_RELEASE)
-        movingDown = false;
-
-    // Arroy Keys
-    if (key == GLFW_KEY_RIGHT && action == GLFW_RELEASE)
-        rotatingRight = false;
-    if (key == GLFW_KEY_LEFT && action == GLFW_RELEASE)
-        rotatingLeft = false;
-    if (key == GLFW_KEY_UP && action == GLFW_RELEASE)
-        rotatingUp = false;
-    if (key == GLFW_KEY_DOWN && action == GLFW_RELEASE)
-        rotatingDown = false;
-
-    // Q/E
-    if (key == GLFW_KEY_Q && action == GLFW_RELEASE)
-        decreasingScale = false;
-    if (key == GLFW_KEY_E && action == GLFW_RELEASE)
-        increasingScale = false;
-
-    // Z/X
-    if (key == GLFW_KEY_Z && action == GLFW_RELEASE)
-        zoomingIn = false;
-    if (key == GLFW_KEY_X && action == GLFW_RELEASE)
-        zoomingOut = false;
-
-    /* Update */
-    // WASD
-    if (movingRight)
-        x_mod += speed;
-    if (movingLeft)
-        x_mod -= speed;
-    if (movingDown)
-        y_mod -= speed;
-    if (movingUp)
-        y_mod += speed;
-
-    // Arrow Keys
-    if (rotatingRight) // Turn right (CW)
-        y_axis_rotate_mod -= speed * 30;
-    if (rotatingLeft) // Turn left (CCW)
-        y_axis_rotate_mod += speed * 30;
-    if (rotatingUp) // Tilt nose up
-        x_axis_rotate_mod -= speed * 30;
-    if (rotatingDown) // Tilt nose down
-        x_axis_rotate_mod += speed * 30;
-
-    // Q/E
-    if (decreasingScale)
-        scale_mod -= speed;
-    if (increasingScale)
-        scale_mod += speed;
-
-    // Z/X
-    if (zoomingIn)
-        z_mod += speed;
-    if (zoomingOut)
-        z_mod -= speed;
-}
-
-
 int main()
 {
     GLFWwindow* window;
@@ -181,9 +36,6 @@ int main()
     glfwMakeContextCurrent(window);
     gladLoadGL();
 
-    // User input
-    glfwSetKeyCallback(window, Key_Callback);
-
     glViewport(0, 0, (int)width, (int)height);
 
     /* Variablles for our texture */
@@ -193,8 +45,9 @@ int main()
     stbi_set_flip_vertically_on_load(true);
 
     /* Load Texture */
+    // Texture retrieved from: https://wallpapers.com/wallpapers/hippie-aesthetic-b8apui9pm9orwz20.html
     unsigned char* tex_bytes =
-        stbi_load("3D/ayaya.png", // texture path
+        stbi_load("3D/texture.jpg", // texture path
             &img_width, // fills out the width
             &img_height, // fills out the height
             &colorChannels, //fills out the color channel
@@ -210,30 +63,17 @@ int main()
     // Bind our next tasks to Tex0
     // To our current reference similar to what we're doing to VBOs
     glBindTexture(GL_TEXTURE_2D, texture);
-    //glTexParameteri(
-    //    GL_TEXTURE_2D,
-    //    GL_TEXTURE_WRAP_S, // S is X axis, T is Y axis
-    //    GL_CLAMP_TO_EDGE // Stretch
-    //    //GL_REPEAT // Tile
-    //);
-    //glTexParameteri(
-    //    GL_TEXTURE_2D,
-    //    GL_TEXTURE_WRAP_T, // S is X axis, T is Y axis
-    //    GL_CLAMP_TO_EDGE // Stretch
-    //    //GL_REPEAT // Tile
-    //);
-
 
     /* Assign Texture to Reference */
     // Assign the loaded texture to the OpenGL reference
     glTexImage2D(
         GL_TEXTURE_2D,
         0, // Texture 0
-        GL_RGBA, // Target color format of the texture
+        GL_RGB, // Target color format of the texture
         img_width, // Texture width
         img_height, // Texture height
         0,
-        GL_RGBA, // Color format of the textyre
+        GL_RGB, // Color format of the textyre
         GL_UNSIGNED_BYTE,
         tex_bytes // Loaded textures in bytes
     );
@@ -247,95 +87,102 @@ int main()
     // Enable Depth Testing
     glEnable(GL_DEPTH_TEST);
 
-    // Vertex shader
+    /* Load the vertex shader file into a string stream */
     std::fstream vertSrc("Shaders/sample.vert");
     std::stringstream vertBuff;
+    // Add the file stream to the string stream
     vertBuff << vertSrc.rdbuf();
+    // Convert the stream to a character array
     std::string vertS = vertBuff.str();
     const char* v = vertS.c_str();
 
-    // Fragment shader
+    /* Load the fragment shader file into a string stream */
     std::fstream fragSrc("Shaders/sample.frag");
     std::stringstream fragBuff;
+    // Add the file stream to the string stream
     fragBuff << fragSrc.rdbuf();
+    // Convert the stream to a character array
     std::string fragS = fragBuff.str();
     const char* f = fragS.c_str();
 
-    GLuint vertShader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertShader, 1, &v, NULL);
-    glCompileShader(vertShader);
+    /* Create a vertex shader */
+    GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
+    // Assign the source to the vertex shader
+    glShaderSource(vertexShader, 1, &v, NULL);
+    // Compile the vertex shader
+    glCompileShader(vertexShader);
 
+    /* Create a fragment shader */
     GLuint fragShader = glCreateShader(GL_FRAGMENT_SHADER);
+    // Assign the source to the fragment shader
     glShaderSource(fragShader, 1, &f, NULL);
+    // Compile the fragment shader
     glCompileShader(fragShader);
 
+    /* Create the shader program */
     GLuint shaderProgram = glCreateProgram();
-    glAttachShader(shaderProgram, vertShader);
+    // Attach the compiled vertex shader
+    glAttachShader(shaderProgram, vertexShader);
+    // Attach the compiled fragment shader
     glAttachShader(shaderProgram, fragShader);
-
+    // Finalize the compilation of the shaders
     glLinkProgram(shaderProgram);
 
-    std::string path = "3D/myCube.obj";
-    std::vector<tinyobj::shape_t> shape;
-    std::vector<tinyobj::material_t> material;
-    std::string warning, error;
+    /* Apply the shaders */
+    glUseProgram(shaderProgram);
 
+    /* Initialize variables for tiny obj loader */
+    // Relative path to the mesh
+    std::string path = "3D/djSword.obj";
+    // Will contain the mesh's shapes
+    std::vector<tinyobj::shape_t> shapes;
+    // Will contain the mesh's material
+    std::vector<tinyobj::material_t> materials;
+    // Some error messages might popup
+    std::string warning, error;
+    // Basic attributes related to the mesh
     tinyobj::attrib_t attributes;
 
-    bool success = tinyobj::LoadObj(
-        &attributes,
-        &shape,
-        &material,
-        &warning,
-        &error,
-        path.c_str()
-    );
+    /* Load the obj */
+    bool success = tinyobj::LoadObj(&attributes, &shapes, &materials, &warning, &error, path.c_str());
 
-    std::vector<GLuint> mesh_indices;
-    for (int i = 0; i < shape[0].mesh.indices.size(); i++) {
-        mesh_indices.push_back(
-            shape[0].mesh.indices[i].vertex_index
-        );
-    }
-
+    /* Initialize the Array of Vertex Data */
     std::vector<GLfloat> fullVertexData;
-    for (int i = 0; i < shape[0].mesh.indices.size(); i++) {
-        tinyobj::index_t vData = shape[0].mesh.indices[i];
+    // Loop thorugh all thee vertex indices
+    for (int i = 0; i < shapes[0].mesh.indices.size(); i++) {
+        // Assign the index data for easier access
+        tinyobj::index_t vData = shapes[0].mesh.indices[i];
         // X
-        fullVertexData.push_back(attributes.vertices[vData.vertex_index * 3]);
+        fullVertexData.push_back(attributes.vertices[(vData.vertex_index * 3)]);
         // Y
-        fullVertexData.push_back(attributes.vertices[vData.vertex_index * 3 + 1]);
+        fullVertexData.push_back(attributes.vertices[(vData.vertex_index * 3) + 1]);
         // Z
-        fullVertexData.push_back(attributes.vertices[vData.vertex_index * 3 + 2]);
+        fullVertexData.push_back(attributes.vertices[(vData.vertex_index * 3) + 2]);
+
+        /* Normals */
+        fullVertexData.push_back(attributes.normals[(vData.normal_index * 3)]);
+        fullVertexData.push_back(attributes.normals[(vData.normal_index * 3) + 1]);
+        fullVertexData.push_back(attributes.normals[(vData.normal_index * 3) + 2]);
+
         // U
-        fullVertexData.push_back(attributes.texcoords[vData.texcoord_index * 2]);
+        fullVertexData.push_back(attributes.texcoords[(vData.texcoord_index * 2)]);
         // V
-        fullVertexData.push_back(attributes.texcoords[vData.texcoord_index * 2 + 1]);
+        fullVertexData.push_back(attributes.texcoords[(vData.texcoord_index * 2) + 1]);
     }
 
-    /* UV Data of Texture */
-    GLfloat UV[]{
-        0.f, 1.f,
-        0.f, 0.f,
-        1.f, 1.f,
-        1.f, 0.f,
-        1.f, 1.f,
-        1.f, 0.f,
-        0.f, 1.f,
-        0.f, 0.f
-    };
-
-    GLuint VAO, VBO, EBO, VBO_UV;
-
-    // initialize VAO, VBO, EBO, UV
+    /* Create VAO / VBO variables */
+    GLuint VAO, VBO;
+  
+    /* initialize VAO, VBO */
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
-    //glGenBuffers(1, &EBO);
-    //glGenBuffers(1, &VBO_UV);
 
+    /* Bind the VAO */
     glBindVertexArray(VAO);
 
+    /* Create an Array Buffer to store vertex positions */
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    /* Add the size of our Vertex Array in bytes and the contents to the buffer */
     glBufferData(
         GL_ARRAY_BUFFER,
         sizeof(GLfloat) * fullVertexData.size(),
@@ -343,50 +190,44 @@ int main()
         GL_STATIC_DRAW
     );
 
+    /* Position Data */
     glVertexAttribPointer(
-        0,
+        0, // Index 0 is vertex position
         3, // X Y Z 
         GL_FLOAT,
         GL_FALSE,
-        5 * sizeof(GLfloat),
+        8 * sizeof(GL_FLOAT),
         (void*)0
     );
-    glEnableVertexAttribArray(0);
 
-    GLintptr uvptr = 3 * sizeof(float);
-
-    //// Bind the UV Buffer
-    //glBindBuffer(GL_ARRAY_BUFFER, VBO_UV);
-    //// Add in the buffer data
-    //glBufferData(GL_ARRAY_BUFFER,
-    //    sizeof(GLfloat) * (sizeof(UV) / sizeof(UV[0])), // float * size of UV array
-    //    &UV[0], // UV array earlier
-    //    GL_DYNAMIC_DRAW);
-
-    // Add in how to interpret the array
+    /* Normal Data */
+    GLint normalPtr = 3 * sizeof(float);
     glVertexAttribPointer(
-        2, // Index 2 for Textures
-        2, // UV
-        GL_FLOAT, // Type of array
+        1, // Index 1 for normals
+        3, // Normals has 3 values
+        GL_FLOAT, // Data type of normals
         GL_FALSE,
-        5 * sizeof(float), // Every 2 index
-        (void*)uvptr
+        8 * sizeof(GL_FLOAT),
+        (void*)normalPtr
     );
-    // Enable 2 for our UV / Tex Coords
-    glEnableVertexAttribArray(2);
 
-    //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    //glBufferData(
-    //    GL_ELEMENT_ARRAY_BUFFER,
-    //    sizeof(GLuint) * mesh_indices.size(),
-    //    mesh_indices.data(),
-    //    GL_STATIC_DRAW
-    //);
+    /* UV Data */
+    GLintptr uvptr = 6 * sizeof(float);
+    glVertexAttribPointer(
+        2, // Index 2 for tex coordinates / UV
+        2, // UV is 2 floats (U,V)
+        GL_FLOAT, // Data type of array
+        GL_FALSE,
+        8 * sizeof(GL_FLOAT), 
+        (void*)uvptr // Add in the offset
+    );
+
+    glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(1);
+    glEnableVertexAttribArray(2);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
     /* IDENTITY MATRIX */
     glm::mat4 identity = glm::mat4(1.0f);
@@ -399,32 +240,37 @@ int main()
         0.1f,           // near
         100.f);         // far
 
+    /* Camera Variables */
+    glm::vec3 cameraPos = glm::vec3(0.f, 0.f, 10.f);
+    glm::vec3 worldUp = glm::normalize(glm::vec3(0.f, 1.f, 0.f));
+    glm::vec3 cameraCenter = glm::vec3(0.f, 0.f, -1.f);
+
+    /* Light Variables */
+    glm::vec3 lightPos = glm::vec3(-10, 3, 0);
+    glm::vec3 lightColor = glm::vec3(1, 1, 1);
+
+    /* Rotation variables */
+    float rot_mod = 0.f;
+
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
     {
         /* Render here */
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear the depth buffer as well
 
-        /* CAMERA MATRIX */
-        glm::vec3 cameraPos = glm::vec3(x_mod, y_mod, 10.f);
-        glm::mat4 cameraPosMatrix = glm::translate(glm::mat4(1.f), cameraPos * -1.f);
-
-        /* ORIENTATION MATRIX */
-        glm::vec3 worldUp = glm::normalize(glm::vec3(0.f, 1.f, 0.f));
-        glm::vec3 cameraCenter = glm::vec3(0.f, 3.f, 0.f);
-
-        /* CAMERA VIEW MATRIX */
+        /* VIEW MATRIX */
         glm::mat4 viewMatrix = glm::lookAt(cameraPos, cameraCenter, worldUp);
 
         /* TRANSFORMATION MATRIX */
         // Translate
-        glm::mat4 transform = glm::translate(identity, glm::vec3(x_mod, y_mod, z_mod));
+        glm::mat4 transform = glm::translate(identity, glm::vec3(0.f, 0.f, -5.f));
         // Scale
-        transform = glm::scale(transform, glm::vec3(scale_mod, scale_mod, scale_mod));
-        // Rotate x
-        transform = glm::rotate(transform, glm::radians(x_axis_rotate_mod), glm::vec3(1.0f, 0.f, 0.f));
+        transform = glm::scale(transform, glm::vec3(0.125f));
         // Rotate y
-        transform = glm::rotate(transform, glm::radians(y_axis_rotate_mod), glm::vec3(0.f, 1.0f, 0.f));
+        transform = glm::rotate(transform, glm::radians(rot_mod), glm::vec3(0.f, 1.0f, 0.f));
+
+        /* Update rot_mod */
+        rot_mod = rot_mod + 0.005f;
 
         unsigned int viewLoc = glGetUniformLocation(shaderProgram, "view");
         glUniformMatrix4fv(viewLoc,
@@ -447,6 +293,15 @@ int main()
             glm::value_ptr(projection)
         );
 
+        /* Lighting Variables */
+        // Light Pos Address
+        GLuint lightAddress = glGetUniformLocation(shaderProgram, "lightPos");
+        glUniform3fv(lightAddress, 1, glm::value_ptr(lightPos));
+        // Light Color 
+        GLuint lightColorAddress = glGetUniformLocation(shaderProgram, "lightColor");
+        glUniform3fv(lightColorAddress, 1, glm::value_ptr(lightColor));
+
+
         // Get the location of the tex 0 in the fragment shader
         GLuint tex0Address = glGetUniformLocation(shaderProgram, "tex0");
         // Tell OpenGl to use the texture
@@ -454,18 +309,13 @@ int main()
         // Use the texture at index 0
         glUniform1i(tex0Address, 0);
 
-        /* Draw EBOs */
+        /* Draw */
         glBindVertexArray(VAO);
-
+        // Apply Shaders
         glUseProgram(shaderProgram);
-
-        //glDrawElements(
-        //    GL_TRIANGLES,
-        //    mesh_indices.size(),
-        //    GL_UNSIGNED_INT,
-        //    (void*)0
-        //);
-        glDrawArrays(GL_TRIANGLES, 0, fullVertexData.size() / 5);
+        
+        // Draw using the vertex array
+        glDrawArrays(GL_TRIANGLES, 0, fullVertexData.size() / 8);
 
         /* Swap front and back buffers */
         glfwSwapBuffers(window);
@@ -476,7 +326,6 @@ int main()
 
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
-    glDeleteBuffers(1, &EBO);
 
     glfwTerminate();
     return 0;
