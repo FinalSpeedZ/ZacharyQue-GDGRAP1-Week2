@@ -14,6 +14,150 @@
 #include <string>
 #include <iostream>
 
+
+/* Global variables */
+// WASD Movement variables
+float x_mod = 0.f;
+float y_mod = 0.f;
+// Rotating variables
+float x_axis_rotate_mod = 0.f;
+float y_axis_rotate_mod = 0.f;
+// Scale variables
+float scale_mod = 0.125f;
+// Zoom variables
+float z_mod = -5.f;
+
+// moving flags
+bool movingUp = false;
+bool movingDown = false;
+bool movingLeft = false;
+bool movingRight = false;
+
+// rotating flags
+bool rotatingLeft = false;
+bool rotatingRight = false;
+bool rotatingUp = false;
+bool rotatingDown = false;
+
+// scaling flags
+bool decreasingScale = false;
+bool increasingScale = false;
+
+// zooming flags
+bool zoomingIn = false;
+bool zoomingOut = false;
+
+void Key_Callback(
+    GLFWwindow* window,
+    int key,
+    int scancode,
+    int action,
+    int mod
+) {
+
+    float speed = 0.05f;
+
+    /* Press Key */
+    // WASD
+    if (key == GLFW_KEY_D && action == GLFW_PRESS)
+        movingRight = true;
+    if (key == GLFW_KEY_A && action == GLFW_PRESS)
+        movingLeft = true;
+    if (key == GLFW_KEY_W && action == GLFW_PRESS)
+        movingUp = true;
+    if (key == GLFW_KEY_S && action == GLFW_PRESS)
+        movingDown = true;
+
+    // Arroy Keys
+    if (key == GLFW_KEY_RIGHT && action == GLFW_PRESS)
+        rotatingRight = true;
+    if (key == GLFW_KEY_LEFT && action == GLFW_PRESS)
+        rotatingLeft = true;
+    if (key == GLFW_KEY_UP && action == GLFW_PRESS)
+        rotatingUp = true;
+    if (key == GLFW_KEY_DOWN && action == GLFW_PRESS)
+        rotatingDown = true;
+
+    // Q/E
+    if (key == GLFW_KEY_Q && action == GLFW_PRESS)
+        decreasingScale = true;
+    if (key == GLFW_KEY_E && action == GLFW_PRESS)
+        increasingScale = true;
+
+    // Z/X
+    if (key == GLFW_KEY_Z && action == GLFW_PRESS)
+        zoomingIn = true;
+    if (key == GLFW_KEY_X && action == GLFW_PRESS)
+        zoomingOut = true;
+
+    /* Release Key */
+    // WASD
+    if (key == GLFW_KEY_D && action == GLFW_RELEASE)
+        movingRight = false;
+    if (key == GLFW_KEY_A && action == GLFW_RELEASE)
+        movingLeft = false;
+    if (key == GLFW_KEY_W && action == GLFW_RELEASE)
+        movingUp = false;
+    if (key == GLFW_KEY_S && action == GLFW_RELEASE)
+        movingDown = false;
+
+    // Arroy Keys
+    if (key == GLFW_KEY_RIGHT && action == GLFW_RELEASE)
+        rotatingRight = false;
+    if (key == GLFW_KEY_LEFT && action == GLFW_RELEASE)
+        rotatingLeft = false;
+    if (key == GLFW_KEY_UP && action == GLFW_RELEASE)
+        rotatingUp = false;
+    if (key == GLFW_KEY_DOWN && action == GLFW_RELEASE)
+        rotatingDown = false;
+
+    // Q/E
+    if (key == GLFW_KEY_Q && action == GLFW_RELEASE)
+        decreasingScale = false;
+    if (key == GLFW_KEY_E && action == GLFW_RELEASE)
+        increasingScale = false;
+
+    // Z/X
+    if (key == GLFW_KEY_Z && action == GLFW_RELEASE)
+        zoomingIn = false;
+    if (key == GLFW_KEY_X && action == GLFW_RELEASE)
+        zoomingOut = false;
+
+    /* Update */
+    // WASD
+    if (movingRight)
+        x_mod += speed;
+    if (movingLeft)
+        x_mod -= speed;
+    if (movingDown)
+        y_mod -= speed;
+    if (movingUp)
+        y_mod += speed;
+
+    // Arrow Keys
+    if (rotatingRight) // Turn right (CW)
+        y_axis_rotate_mod -= speed * 30;
+    if (rotatingLeft) // Turn left (CCW)
+        y_axis_rotate_mod += speed * 30;
+    if (rotatingUp) // Tilt nose up
+        x_axis_rotate_mod -= speed * 30;
+    if (rotatingDown) // Tilt nose down
+        x_axis_rotate_mod += speed * 30;
+
+    // Q/E
+    //if (decreasingScale)
+    //    scale_mod -= speed;
+    //if (increasingScale)
+    //    scale_mod += speed;
+
+    // Z/X
+    if (zoomingIn)
+        z_mod += speed;
+    if (zoomingOut)
+        z_mod -= speed;
+}
+
+
 int main()
 {
     GLFWwindow* window;
@@ -35,6 +179,9 @@ int main()
     /* Make the window's context current */
     glfwMakeContextCurrent(window);
     gladLoadGL();
+
+    /* User Input */
+    glfwSetKeyCallback(window, Key_Callback);
 
     glViewport(0, 0, (int)width, (int)height);
 
@@ -261,9 +408,6 @@ int main()
     // Spec phong
     float specPhong = 16;
 
-    /* Rotation variables */
-    float rot_mod = 0.f;
-
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
     {
@@ -275,14 +419,12 @@ int main()
 
         /* TRANSFORMATION MATRIX */
         // Translate
-        glm::mat4 transform = glm::translate(identity, glm::vec3(0.f, 0.f, -5.f));
+        glm::mat4 transform = glm::translate(identity, glm::vec3(x_mod, y_mod, z_mod));
         // Scale
-        transform = glm::scale(transform, glm::vec3(0.125f));
-        // Rotate y
-        transform = glm::rotate(transform, glm::radians(rot_mod), glm::vec3(0.f, 1.0f, 0.f));
-
-        /* Update rot_mod */
-        rot_mod = rot_mod + 0.005f;
+        transform = glm::scale(transform, glm::vec3(scale_mod));
+        // Rotate
+        transform = glm::rotate(transform, glm::radians(x_axis_rotate_mod), glm::vec3(1.f, 0.0f, 0.f));
+        transform = glm::rotate(transform, glm::radians(y_axis_rotate_mod), glm::vec3(0.f, 1.0f, 0.f));
 
         unsigned int viewLoc = glGetUniformLocation(shaderProgram, "view");
         glUniformMatrix4fv(viewLoc,
