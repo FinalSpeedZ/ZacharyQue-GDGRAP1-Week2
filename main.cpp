@@ -23,7 +23,7 @@ float y_mod = 0.f;
 float x_axis_rotate_mod = 0.f;
 float y_axis_rotate_mod = 0.f;
 // Scale variables
-float scale_mod = 0.125f;
+float scale_mod = 5.f;
 // Zoom variables
 float z_mod = -5.f;
 
@@ -194,7 +194,7 @@ int main()
     /* Load Texture */
     // Texture retrieved from: https://wallpapers.com/wallpapers/hippie-aesthetic-b8apui9pm9orwz20.html
     unsigned char* tex_bytes =
-        stbi_load("3D/ayaya.png", // texture path
+        stbi_load("3D/grass.png", // texture path
             &img_width, // fills out the width
             &img_height, // fills out the height
             &colorChannels, //fills out the color channel
@@ -658,6 +658,12 @@ int main()
         // Apply Shaders
         glUseProgram(shaderProgram);
         
+        // Blending (for semi-transparent)
+        glEnable(GL_BLEND);
+        // Choose a Blending Fucntion
+        glBlendFunc(GL_SRC_ALPHA, // foreground
+                    GL_ONE_MINUS_SRC_ALPHA); // background
+
         // Draw using the vertex array
         glDrawArrays(GL_TRIANGLES, 0, fullVertexData.size() / 8);
 
