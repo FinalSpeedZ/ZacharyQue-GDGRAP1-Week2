@@ -23,7 +23,7 @@ float y_mod = 0.f;
 float x_axis_rotate_mod = 0.f;
 float y_axis_rotate_mod = 0.f;
 // Scale variables
-float scale_mod = 5.f;
+float scale_mod = 2.5f;
 // Zoom variables
 float z_mod = -5.f;
 
@@ -145,10 +145,10 @@ void Key_Callback(
         x_axis_rotate_mod += speed * 30;
 
     // Q/E
-    //if (decreasingScale)
-    //    scale_mod -= speed;
-    //if (increasingScale)
-    //    scale_mod += speed;
+    if (decreasingScale)
+        scale_mod -= speed;
+    if (increasingScale)
+        scale_mod += speed;
 
     // Z/X
     if (zoomingIn)
@@ -194,7 +194,7 @@ int main()
     /* Load Texture */
     // Texture retrieved from: https://wallpapers.com/wallpapers/hippie-aesthetic-b8apui9pm9orwz20.html
     unsigned char* tex_bytes =
-        stbi_load("3D/grass.png", // texture path
+        stbi_load("3D/brickwall.jpg", // texture path
             &img_width, // fills out the width
             &img_height, // fills out the height
             &colorChannels, //fills out the color channel
@@ -216,11 +216,11 @@ int main()
     glTexImage2D(
         GL_TEXTURE_2D,
         0, // Texture 0
-        GL_RGBA, // Target color format of the texture
+        GL_RGB, // Target color format of the texture
         img_width, // Texture width
         img_height, // Texture height
         0,
-        GL_RGBA, // Color format of the textyre
+        GL_RGB, // Color format of the texture
         GL_UNSIGNED_BYTE,
         tex_bytes // Loaded textures in bytes
     );
@@ -371,7 +371,7 @@ int main()
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, skyboxEBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(skyboxIndices), &skyboxIndices, GL_STATIC_DRAW);
 
-    glEnableVertexAttribArray(0); 
+    glEnableVertexAttribArray(0);
 
     std::string faceSkybox[]{
         "Skybox/rainbow_rt.png", // right
@@ -427,7 +427,7 @@ int main()
 
     /* Initialize variables for tiny obj loader */
     // Relative path to the mesh
-    std::string path = "3D/djSword.obj";
+    std::string path = "3D/plane.obj";
     // Will contain the mesh's shapes
     std::vector<tinyobj::shape_t> shapes;
     // Will contain the mesh's material
@@ -466,7 +466,7 @@ int main()
 
     /* Create VAO / VBO variables */
     GLuint VAO, VBO;
-  
+
     /* initialize VAO, VBO */
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
@@ -512,7 +512,7 @@ int main()
         2, // UV is 2 floats (U,V)
         GL_FLOAT, // Data type of array
         GL_FALSE,
-        8 * sizeof(GL_FLOAT), 
+        8 * sizeof(GL_FLOAT),
         (void*)uvptr // Add in the offset
     );
 
@@ -554,6 +554,10 @@ int main()
     float specStr = 0.5f;
     // Spec phong
     float specPhong = 16;
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
 
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
@@ -657,12 +661,7 @@ int main()
         glBindVertexArray(VAO);
         // Apply Shaders
         glUseProgram(shaderProgram);
-        
-        // Blending (for semi-transparent)
-        glEnable(GL_BLEND);
-        // Choose a Blending Fucntion
-        glBlendFunc(GL_SRC_ALPHA, // foreground
-                    GL_ONE_MINUS_SRC_ALPHA); // background
+
 
         // Draw using the vertex array
         glDrawArrays(GL_TRIANGLES, 0, fullVertexData.size() / 8);
